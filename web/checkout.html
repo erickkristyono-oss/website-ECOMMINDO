@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Checkout | Ecommindo Jaya Persada</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="cart">
+
+<header class="navbar">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <span class="brand-eyebrow">IT Consultant</span>
+        <span class="brand-name">ECOMMINDO</span>
+        <span class="brand-sub">Jaya Persada</span>
+      </div>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html" data-page="home">Home</a>
+      <a href="service.html" data-page="service">Service</a>
+      <a href="about.html" data-page="about">About Us</a>
+      <a href="contact.html" data-page="contact">Contact Us</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="cart.html" class="icon-btn" aria-label="Cart">
+        🛒
+        <span class="cart-badge" data-cart-count>0</span>
+      </a>
+      <span data-auth-slot></span>
+      <button class="nav-toggle" aria-label="Menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="page-header">
+    <div class="container">
+      <span class="eyebrow">Checkout</span>
+      <h1>Selesaikan <span class="gradient-text">Pemesanan</span> Anda</h1>
+      <div class="breadcrumb"><a href="index.html">Home</a><span>/</span><a href="cart.html">Cart</a><span>/</span><span>Checkout</span></div>
+    </div>
+  </section>
+
+  <section style="padding-top:10px;">
+    <div class="container" id="checkoutContainer"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-bottom" style="border-top:none;padding-top:0;justify-content:center;">
+      <span>© 2026 PT Ecommindo Jaya Persada. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  requireLogin("checkout.html");
+
+  const container = document.getElementById("checkoutContainer");
+  const user = getCurrentUser();
+
+  async function renderForm() {
+    let cart;
+    try {
+      cart = await getCartSummary();
+    } catch (e) {
+      container.innerHTML = `<p style="color:var(--text-muted);">Gagal memuat keranjang. Pastikan server backend berjalan.</p>`;
+      return;
+    }
+
+    const items = cart.items;
+
+    if (items.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon-badge">🧾</div>
+          <h3>Tidak ada layanan untuk di-checkout</h3>
+          <p>Silakan pilih layanan terlebih dahulu sebelum melanjutkan ke checkout.</p>
+          <div style="margin-top:24px;">
+            <a href="service.html" class="btn btn-primary">Lihat Layanan</a>
+          </div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="checkout-layout">
+        <div>
+          <div class="card reveal" style="margin-bottom:24px;">
+            <h3 style="font-size:17px;font-weight:700;margin-bottom:18px;">Data Pemesan</h3>
+            <div class="summary-row"><span>Nama Lengkap</span><span>${user.full_name}</span></div>
+            <div class="summary-row"><span>Nomor HP</span><span>${user.phone}</span></div>
+            <div class="summary-row"><span>Email</span><span>${user.email}</span></div>
+          </div>
+
+          <div class="card reveal">
+            <h3 style="font-size:17px;font-weight:700;margin-bottom:18px;">Metode Pembayaran</h3>
+            <p style="color:var(--text-muted);font-size:14px;margin-bottom:18px;">Pembayaran saat ini dilakukan melalui transfer bank manual ke salah satu rekening berikut. Sistem payment gateway otomatis akan segera hadir.</p>
+
+            <div class="bank-card">
+              <div>
+                <div class="bank-name">Bank BCA a.n. PT Ecommindo Jaya Persada</div>
+                <div class="bank-num">1234 5678 90</div>
+              </div>
+              <button class="copy-btn" data-copy="1234567890" type="button">Salin</button>
+            </div>
+            <div class="bank-card">
+              <div>
+                <div class="bank-name">Bank Mandiri a.n. PT Ecommindo Jaya Persada</div>
+                <div class="bank-num">9876 5432 10</div>
+              </div>
+              <button class="copy-btn" data-copy="9876543210" type="button">Salin</button>
+            </div>
+
+            <div class="notice">
+              <strong>Catatan:</strong> Setelah melakukan transfer, klik tombol "Konfirmasi Pesanan" di bawah lalu kirim bukti transfer beserta Order ID Anda ke <strong>info@ecommindo.co.id</strong> atau WhatsApp (021) 1234-5678 untuk verifikasi.
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-card reveal">
+          <h3>Ringkasan Pesanan</h3>
+          ${items
+            .map(
+              (s) => `<div class="summary-row"><span>${s.name}</span><span>${formatRupiah(s.price)}</span></div>`
+            )
+            .join("")}
+          <div class="summary-total"><span>Total Pembayaran</span><span class="gradient-text">${formatRupiah(cart.total)}</span></div>
+          <button class="btn btn-primary btn-block" id="confirmOrderBtn">Konfirmasi Pesanan</button>
+        </div>
+      </div>`;
+    initReveal();
+
+    container.querySelectorAll("[data-copy]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        navigator.clipboard?.writeText(btn.getAttribute("data-copy"));
+        showToast("Nomor rekening disalin.");
+      });
+    });
+
+    document.getElementById("confirmOrderBtn").addEventListener("click", async () => {
+      const confirmBtn = document.getElementById("confirmOrderBtn");
+      confirmBtn.disabled = true;
+      try {
+        const order = await checkoutOrder();
+        await initNavbar();
+        renderSuccess(order);
+      } catch (err) {
+        showToast(err.message);
+        confirmBtn.disabled = false;
+      }
+    });
+  }
+
+  function renderSuccess(order) {
+    container.innerHTML = `
+      <div class="card success-box">
+        <div class="success-icon">✓</div>
+        <h2 style="font-size:26px;font-weight:800;margin-bottom:12px;">Pesanan Berhasil Dibuat!</h2>
+        <p style="color:var(--text-muted);max-width:460px;margin:0 auto 24px;">
+          Order ID Anda adalah <strong style="color:var(--text);">${order.order_code}</strong> dengan total
+          <strong class="gradient-text">${formatRupiah(order.total)}</strong>.
+          Silakan selesaikan transfer dan kirim bukti pembayaran ke tim kami untuk verifikasi.
+        </p>
+        <div class="hero-actions" style="justify-content:center;">
+          <a href="index.html" class="btn btn-primary">Kembali ke Beranda</a>
+          <a href="service.html" class="btn btn-outline">Pesan Layanan Lain</a>
+        </div>
+      </div>`;
+  }
+
+  if (user) renderForm();
+</script>
+</body>
+</html>

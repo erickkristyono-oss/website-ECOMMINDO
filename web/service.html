@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Layanan Kami | Ecommindo Jaya Persada</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="service">
+
+<header class="navbar">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <span class="brand-eyebrow">IT Consultant</span>
+        <span class="brand-name">ECOMMINDO</span>
+        <span class="brand-sub">Jaya Persada</span>
+      </div>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html" data-page="home">Home</a>
+      <a href="service.html" data-page="service">Service</a>
+      <a href="about.html" data-page="about">About Us</a>
+      <a href="contact.html" data-page="contact">Contact Us</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="cart.html" class="icon-btn" aria-label="Cart">
+        🛒
+        <span class="cart-badge" data-cart-count>0</span>
+      </a>
+      <span data-auth-slot></span>
+      <button class="nav-toggle" aria-label="Menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="page-header">
+    <div class="container">
+      <span class="eyebrow">Layanan</span>
+      <h1>Layanan <span class="gradient-text">IT Consulting</span> Kami</h1>
+      <p>Pilih layanan yang sesuai dengan kebutuhan bisnis Anda. Login diperlukan untuk menambahkan layanan ke keranjang.</p>
+      <div class="breadcrumb"><a href="index.html">Home</a><span>/</span><span>Service</span></div>
+    </div>
+  </section>
+
+  <section style="padding-top:20px;">
+    <div class="container">
+      <div class="grid grid-3" id="serviceGrid"></div>
+    </div>
+  </section>
+
+  <section class="section-alt">
+    <div class="container">
+      <div class="cta-banner reveal">
+        <h2>Belum Yakin Layanan Mana yang Tepat?</h2>
+        <p>Tim konsultan kami siap membantu Anda menentukan solusi terbaik sesuai kebutuhan dan anggaran.</p>
+        <div class="hero-actions" style="justify-content:center;">
+          <a href="contact.html" class="btn btn-outline">Konsultasi Gratis</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-about">
+        <a href="index.html" class="brand">
+          <div class="brand-mark"></div>
+          <div class="brand-text">
+            <span class="brand-eyebrow">IT Consultant</span>
+            <span class="brand-name">ECOMMINDO</span>
+            <span class="brand-sub">Jaya Persada</span>
+          </div>
+        </a>
+        <p>PT Ecommindo Jaya Persada adalah konsultan IT yang membantu bisnis Anda bertransformasi digital dengan solusi aplikasi, infrastruktur, dan keamanan siber yang andal.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Navigasi</h5>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="service.html">Service</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Akun</h5>
+        <ul>
+          <li><a href="cart.html">Keranjang</a></li>
+          <li><a href="login.html">Login</a></li>
+          <li><a href="login.html">Register</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Kontak</h5>
+        <ul>
+          <li><a href="mailto:info@ecommindo.co.id">info@ecommindo.co.id</a></li>
+          <li><a href="tel:+622112345678">(021) 1234-5678</a></li>
+          <li>Jakarta, Indonesia</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 PT Ecommindo Jaya Persada. All rights reserved.</span>
+      <div class="social-row">
+        <a href="#" aria-label="Instagram">IG</a>
+        <a href="#" aria-label="LinkedIn">in</a>
+        <a href="#" aria-label="WhatsApp">WA</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const grid = document.getElementById("serviceGrid");
+  let allServices = [];
+
+  async function render() {
+    try {
+      const [services, cart] = await Promise.all([
+        allServices.length ? Promise.resolve(allServices) : getServices(),
+        getCartSummary(),
+      ]);
+      allServices = services;
+      const inCartIds = cart.items.map((i) => i.id);
+
+      grid.innerHTML = services.map((s) => {
+        const added = inCartIds.includes(s.id);
+        return `
+        <div class="card service-card reveal" id="${s.id}">
+          ${serviceImageTag(s)}
+          <div class="icon-badge">${s.icon}</div>
+          <h3>${s.name}</h3>
+          <p>${s.description}</p>
+          <div class="service-price"><small>Harga</small>${formatRupiah(s.price)}</div>
+          <div class="service-foot">
+            <button class="btn ${added ? "btn-outline" : "btn-primary"} btn-block" data-add="${s.id}" ${added ? "disabled" : ""}>
+              ${added ? "✓ Sudah di Keranjang" : "Tambah ke Keranjang"}
+            </button>
+          </div>
+        </div>`;
+      }).join("");
+      initReveal();
+
+      grid.querySelectorAll("[data-add]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-add");
+          if (!isLoggedIn()) {
+            sessionStorage.setItem("ecommindo_pending_add", id);
+            window.location.href = "login.html?redirect=service.html";
+            return;
+          }
+          btn.disabled = true;
+          try {
+            await addToCart(id);
+            showToast("Layanan ditambahkan ke keranjang.");
+            await initNavbar();
+            await render();
+          } catch (err) {
+            showToast(err.message);
+            btn.disabled = false;
+          }
+        });
+      });
+    } catch (e) {
+      grid.innerHTML = `<p style="color:var(--text-muted);">Gagal memuat layanan. Pastikan server backend berjalan.</p>`;
+    }
+  }
+
+  (async () => {
+    await render();
+
+    const pending = sessionStorage.getItem("ecommindo_pending_add");
+    if (pending && isLoggedIn()) {
+      sessionStorage.removeItem("ecommindo_pending_add");
+      try {
+        await addToCart(pending);
+        await initNavbar();
+        await render();
+        showToast("Layanan ditambahkan ke keranjang.");
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+  })();
+</script>
+</body>
+</html>
