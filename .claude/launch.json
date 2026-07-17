@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "backend",
-      "runtimeExecutable": "go",
-      "runtimeArgs": ["run", "./cmd"],
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "127.0.0.1:8080", "-t", "web", "web/router.php"],
       "port": 8080
     }
   ]
