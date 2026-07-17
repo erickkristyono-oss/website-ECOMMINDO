@@ -1,0 +1,11 @@
+RewriteEngine On
+
+# Block direct public access to files/folders that aren't part of the website
+RewriteRule ^migrations/ - [F,L]
+RewriteRule ^router\.php$ - [F,L]
+RewriteRule ^\.claude/ - [F,L]
+RewriteRule ^\.git/ - [F,L]
+RewriteRule ^\.gitignore$ - [F,L]
+RewriteRule ^README\.md$ - [F,L]
+
+DirectoryIndex index.html
